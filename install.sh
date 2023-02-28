@@ -5,7 +5,6 @@ set -e
 ENV_FILE=./.env
 GEODATA_DIR=./services/l2jmobius/geodata
 SRC_DIR=./services/l2jmobius/src
-BUILD_DIR=./services/l2jmobius/build
 
 # Create needed directories if they don't exist yet
 mkdir -p ./services/mariadb/data
