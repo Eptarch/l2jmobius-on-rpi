@@ -1,7 +1,9 @@
 # L2JMobius-on-rpi
+
 This repository contains bootstrap files to easily install L2JMobius server on your Raspberry Pi 4B **8Gb**
 
 If you like any part of this repository, please consider to:
+
 - Donate to L2J Mobius.
 - Leave a star on this repository.
 
@@ -21,9 +23,9 @@ Feel free to clone and tinker, and come back into issues with your findings, or 
 Warning: This instructions involve some repository juggling, please read carefully.
 
 1. Clone **THIS** repository.
-1. Read through Mobius' instructions for W64, but don't do anything yet. This is just so you know where's what. The only thing you'll actually need from Mobius' instructions for now is server repository link.
-1. Clone L2JMobius server repository. You should end up with a bunch of folders inside it, like `Account_Manager`, `L2J_Mobius_01.0_Ertheia`, etc. Make your mind about what server do you want and copy that server files into `./services/l2jmobius/src/` directory, so `build.xml` ends up being in `./services/l2jmobius/src/`
-1. Read through the `readme.txt`, and download related geodata file into `./services/l2jmobius/geodata/` directory of **THIS** repository. The structure should end up looking like this:
+2. Read through Mobius' instructions for W64, but don't do anything yet. This is just so you know where's what. The only thing you'll actually need from Mobius' instructions for now is server repository link.
+3. Clone L2JMobius server repository. You should end up with a bunch of folders inside it, like `Account_Manager`, `L2J_Mobius_01.0_Ertheia`, etc. Make your mind about what server do you want and copy that server files into `./services/l2jmobius/src/` directory, so `build.xml` ends up being in `./services/l2jmobius/src/`
+4. Read through the `readme.txt`, and download related geodata file into `./services/l2jmobius/geodata/` directory of **THIS** repository. The structure should end up looking like this:
 
 ```
 ./
@@ -46,9 +48,10 @@ Warning: This instructions involve some repository juggling, please read careful
 └── README.md <~ You are here
 ```
 
-1. If you want to edit server settings, now is the time. Game server configs are in `./services/l2jmobius/src/dist/game/config` directory, login server configs are in `/.services/l2jmobius/src/dist/login/config` directory. Backing these up is a good idea too. Do not edit database url, database user and database password in Server.ini and LoginServer.ini files! These are edited via `install.sh` script later.
-1. Edit `./services/build-entrypoint.sh`, most important thing it contains is an example of ipconfig.xml, a file that makes your game server available on specified hosts other than localhost. As far as I can tell, this file is responsible for IPs your login server tells your client to try to connect to when you see game server list after logging in. If ipconfig.xml contains only default values (from `default-ipconfig.xml`) or is misconfigured, your client will not be able to connect to your game server. My default values are for my own setup, in which my Raspberry Pi has static IP address (`192.168.1.2`). If you want to use the default-ipconfig.xml (i.e. your intent is just to play on localhost), remove these lines (starting from cat, up to EOM)
-1. Edit `./.env` file in the root of **THIS** repository. It must contain MARIADB_USER, MARIADB_PASSWORD, MARIADB_ROOT_USER, and any or no value for MARIADB_DATABASE:
+5. If you want to edit server settings, now is the time. Game server configs are in `./services/l2jmobius/src/dist/game/config` directory, login server configs are in `/.services/l2jmobius/src/dist/login/config` directory. Backing these up is a good idea too. Do not edit database url, database user and database password in Server.ini and LoginServer.ini files! These are edited via `install.sh` script later.
+6. Edit `./services/build-entrypoint.sh`, most important thing it contains is an example of ipconfig.xml, a file that makes your game server available on specified hosts other than localhost. As far as I can tell, this file is responsible for IPs your login server tells your client to try to connect to when you see game server list after logging in. If ipconfig.xml contains only default values (from `default-ipconfig.xml`) or is misconfigured, your client will not be able to connect to your game server. My default values are for my own setup, in which my Raspberry Pi has static IP address (`192.168.1.2`). If you want to use the default-ipconfig.xml (i.e. your intent is just to play on localhost), remove these lines (starting from cat, up to EOM)
+7. Edit `./.env` file in the root of **THIS** repository. It must contain MARIADB_USER, MARIADB_PASSWORD, MARIADB_ROOT_USER, and any or no value for MARIADB_DATABASE:
+
 ```
 MARIADB_USER=l2j_db_user
 MARIADB_PASSWORD=l2j_db_password
@@ -56,10 +59,12 @@ MARIADB_ROOT_PASSWORD=l2j_root_password
 MARIADB_DATABASE=
 ```
 
-1. Now we can try to bring this all together^
+8. Now we can try to bring this all together^
+
 ```bash
 ./install.sh
 ```
+
 You'll have to wait some time, if it hands for more than 15 minutes on your Raspberry Pi, just `Ctrl+C` and restart it. Nothing irreversibly bad will happen.
 Next thing you want to do is set up your client and go play! Congrats!
 
