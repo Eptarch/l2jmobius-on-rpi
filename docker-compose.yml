@@ -1,0 +1,102 @@
+version: "3"
+
+networks:
+  l2jmobius:
+
+x-env: &env
+  MARIADB_PASSWORD: "${MARIADB_PASSWORD:-NO_PASSWORD_SET}"
+  MARIADB_ROOT_PASSWORD: "${MARIADB_ROOT_PASSWORD:-NO_ROOT_PASSWORD_SET}"
+  MARIADB_USER: "${MARIADB_USER:-NO_USER_SET}"
+  MARIADB_DATABASE: "${MARIADB_DATABASE:-NO_DATABASE_NAME_SET}"
+
+x-common: &common
+  networks: [l2jmobius]
+  restart: unless-stopped
+  tty: True
+
+services:
+  builder:
+    build:
+      context: ./services/l2jmobius
+      dockerfile: builder.Dockerfile
+    container_name: l2jmobius_builder
+    entrypoint: ./builder-entrypoint.sh
+    environment:
+      <<: [*env]
+    image: l2jmobius:latest
+    networks: [l2jmobius]  # This is just to prevent the creation of default network
+    volumes:
+      - ./services/l2jmobius/build:/opt/l2jmobius/ready
+      - ./services/l2jmobius/geodata:/opt/l2jmobius/geodata
+      - ./services/l2jmobius/src:/opt/l2jmobius/src
+  db:
+    <<: *common
+    build:
+      context: ./services/mariadb
+      dockerfile: mariadb.Dockerfile
+    command: mysqld --default-authentication-plugin=mysql_native_password
+    container_name: l2jmobius_db
+    environment:
+      <<: [*env]
+    healthcheck:
+      test: mysql --user $MARIADB_USER --password=$MARIADB_PASSWORD -e "SELECT 1" 2>/dev/null
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 5s
+    image: l2jmobius_db:latest
+    volumes:
+      - ./services/mariadb/data/:/var/lib/mysql
+  phpmyadmin:
+    <<: *common
+    container_name: l2jmobius_phpmyadmin
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      - PUID=1000
+      - PGID=1000
+      - TZ=Etc/UTC
+      - PMA_HOST=l2jmobius_db
+    image: lscr.io/linuxserver/phpmyadmin:latest
+    ports:
+      - 88:80/tcp
+    volumes:
+      - ./services/phpmyadmin/config:/config
+  game-server:
+    <<: *common
+    build:
+      context: ./services/l2jmobius
+      dockerfile: game.Dockerfile
+    image: l2jmobius-game:latest
+    container_name: l2jmobius_game
+    command: bash -c "./GameServerTask.sh"
+    depends_on:
+      db:
+        condition: service_healthy
+      builder:
+        condition: service_completed_successfully
+    image: l2jmobius_game:latest
+    ports:
+      - 7777:7777/tcp
+    volumes:
+      - ./services/l2jmobius/build/game:/opt/l2jmobius/game
+      - ./services/l2jmobius/build/libs:/opt/l2jmobius/libs
+  login-server:
+    <<: *common
+    build:
+      context: ./services/l2jmobius
+      dockerfile: login.Dockerfile
+    container_name: l2jmobius_login
+    command: bash -c "./LoginServerTask.sh"
+    depends_on:
+      db:
+        condition: service_healthy
+      builder:
+        condition: service_completed_successfully
+    image: l2jmobius_login:latest
+    ports:
+      - 2106:2106/tcp
+    volumes:
+      - ./services/l2jmobius/build/login:/opt/l2jmobius/login
+      - ./services/l2jmobius/build/libs:/opt/l2jmobius/libs
